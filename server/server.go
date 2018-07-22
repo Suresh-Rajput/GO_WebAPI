@@ -6,12 +6,17 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	validator "gopkg.in/go-playground/validator.v9"
 )
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
 
 // Initialize used to initialize http server
 func Initialize() {
 	e := echo.New()
-
+	e.Validator = &CustomValidator{validator: validator.New()}
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -23,13 +28,16 @@ func Initialize() {
 
 	//ROUTES
 	e.GET("/status", checkStatus)
-	g := e.Group("/users") // creating users routing group
+	g := e.Group("/students") // creating students routing group
 	//g.Use() // Authenticate  request
 
-	g.POST("/info", controllers.GetUsers)
+	g.GET("/info", controllers.GetUsers)
 	// Server
 	e.Logger.Fatal(e.Start(":8080"))
 }
 func checkStatus(echo echo.Context) error {
 	return echo.HTML(http.StatusOK, "<br> Hello World !! </br>")
+}
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
 }
